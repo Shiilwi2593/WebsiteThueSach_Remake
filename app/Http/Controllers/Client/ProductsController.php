@@ -22,6 +22,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Facades\Validator;
 
+//Tín
+use App\Design_patterns\Prototype;
+use App\Design_patterns\Prototype\Product as ProductPrototype;
+use App\Models\Product as ProductModel;
+
 class ProductsController extends Controller
 {
     //
@@ -127,53 +132,7 @@ class ProductsController extends Controller
             'min_price' => $minPrice ?? 0,
         ]);
     }
-    // public function addComment(Product $product)
-    // {
-    //     $attributes = request()->validate([
-    //         'the_comment' => 'required|min:5|max:300']);
-                
-    //     $attributes['user_id'] = auth()->id();
-
-    //     $comment = $product->comments()->create($attributes);
-
-    //     return redirect('/comment/' . $product->slug . '#comment_' . $comment->id)->with('success', 'Bạn vừa bình luận thành công.');
-
-    // }
-    // //
-    // public function addCommentUser(){
-    //     $data = array();
-    //     $data['success'] = 0;
-    //     $data['errors'] = [];
-
-    //     $rules = [
-    //         'the_comment' => 'required|min:5|max:300',
-    //         'product_title' => 'required',
-    //     ];
-       
-    //     $validated = Validator::make( request()->all(), $rules);
-
-    //     if($validated->fails()){
-    //         $data['errors'] = $validated->errors()->first('the_comment');
-      
-    //         $data['message'] = "Khổng thể bình luận";
-
-    //     }else{
-    //         $attributes = $validated->validated();
-    //         $product = Product::where('title', $attributes['product_title'])->first();
-
-    //         $comment['the_comment'] = $attributes['the_comment']; 
-    //         $comment['product_id'] = $product->id ; 
-    //         $comment['user_id'] = auth()->id();
-    //         dd( $comment);
-    //         $product->comments()->create($comment);
-
-    //         $data['success'] = 1;
-    //         $data['message'] = "Bạn đã bình luận thành công !";
-    //         $data['result'] = $comment;
-    //     }
-  
-    //     return response()->json($data);
-    // }
+    
     public function vnIndex() {
 
         $number_rent_price_days = request()->number_rent_price_days ?? 7;
@@ -251,7 +210,9 @@ class ProductsController extends Controller
 
         $allProductsPipeline = Pipeline::send(Product::query())
         ->through($allProductsPipelines)
-        ->thenReturn();
+        ->thenReturn()
+        ->where('status', 1); // Thêm điều kiện where vào pipeline
+
 
         $allProducts = $allProductsPipeline->where('status', 1)->get();
 
@@ -264,6 +225,12 @@ class ProductsController extends Controller
         if ($rentPrices) {
             $maxPrice = max($rentPrices);
             $minPrice = min($rentPrices);
+        }
+        //prototype
+        $clonedProducts = [];
+        foreach ($products as $product) 
+        {
+            $clonedProducts[] = $product->clone();
         }
 
         return view('client.vn_pages.products.products', [
